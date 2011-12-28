@@ -2,6 +2,11 @@
 
 This project rocks and uses MIT-LICENSE.
 
+To install:
+gem install cocu
+OR
+Add the following to your Gemfile: gem 'cocu'
+
 To use the formatter for the default cucumber execution you can use:
 
 rake cucumber:cocu
