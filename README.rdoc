@@ -1,3 +1,11 @@
 = Cocu
 
 This project rocks and uses MIT-LICENSE.
+
+To use the formatter for the default cucumber execution you can use:
+
+rake cucumber: cocu
+
+If you want to use the formatter explicitly add the following to your cucumber call:
+
+--format cocu
