@@ -18,6 +18,7 @@ module Cucumber
         @current_feature_name = ""
         @scenarios = []
         @feature_element_passed = true
+        initialize_step_formatters
       end
 
       def after_features(features)
@@ -48,12 +49,11 @@ module Cucumber
       end
 
       def before_step_result(keyword, step_match, multiline_args, status, exception, source_indent, background)
-        @feature_element_passed = (@feature_element_passed && (status == :passed))
+        @feature_element_passed = (status == :passed)
 
-        #step = step_match.step_definition
-        if status == :failed 
-          @failed_step = format_step(keyword, step_match, status, source_indent)
-          @step_exception = format_string("Error: #{exception}", status)
+        if status != :passed
+          step_string = format_step(keyword, step_match, status, source_indent)
+          @failed_steps << format_step_with_error(step_string, status, exception)
         end
       end
 
@@ -64,11 +64,14 @@ module Cucumber
         scenario_string << format_string(feature_element.title, result)
 
         if !@feature_element_passed
-          scenario_string << "\n" + (" " * 6) 
-          scenario_string << @failed_step
-          scenario_string << "\n" + (" " * 6) 
-          scenario_string << @step_exception
+          @failed_steps.each do |step|
+            #Split string here at linebreak and insert 6 spaces for first error and 12 for succeeding
+            scenario_string << step + "\n"
+            #scenario_string << "\n" + (" " * 6) 
+          end
         end
+        @failed_steps = []
+        @step_exceptions = []
 
         @scenarios << scenario_string
       end
@@ -88,6 +91,16 @@ module Cucumber
       def print_summary(features)
         print_stats(features, @options)
       end
+
+      def format_step_with_error(step_string, status, exception)
+        return @step_formatters[status].call(step_string, status, exception) 
+      end
+
+      def initialize_step_formatters
+        @step_formatters = Hash.new( Proc.new {|string, status, exception| string })
+        @step_formatters[:failed] = Proc.new { |string, status, exception| string + "\n" + format_string("Error: #{exception}",status) }
+      end
+
     end
   end
 end
