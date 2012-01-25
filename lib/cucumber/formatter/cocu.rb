@@ -8,6 +8,8 @@ module Cucumber
       include Io
       include Console
 
+      INTENT_WIDTH = 6 # Spaces
+
       attr_accessor :step_mother
 
       def initialize(step_mother, path_or_io, options)
@@ -30,7 +32,7 @@ module Cucumber
       end
 
       def after_feature(feature)
-        path_string = Pathname.new(feature.file).basename.to_s + ": "  #@current_feature_name, :passed)
+        path_string = Pathname.new(feature.file).basename.to_s + ": "
         feature_name = format_string(reformat_name(feature.name), :comment)
         @io.puts path_string + feature_name
         @scenarios.each do |scenario_string|
@@ -65,15 +67,26 @@ module Cucumber
 
         if !@feature_element_passed
           @failed_steps.each do |step|
-            #Split string here at linebreak and insert 6 spaces for first error and 12 for succeeding
-            scenario_string << step + "\n"
-            #scenario_string << "\n" + (" " * 6) 
+            scenario_string << format_step_error_string(step)
           end
         end
         @failed_steps = []
         @step_exceptions = []
 
         @scenarios << scenario_string
+      end
+
+      
+      private
+
+      def format_step_error_string(step)
+        result = ""
+        lines = step.split "\n"
+        result << (" " * INTENT_WIDTH) + lines.shift + "\n"
+        lines.each do |a_line|
+          result << (" " * (INTENT_WIDTH * 2)) + a_line + "\n"
+        end
+        return result
       end
 
       def reformat_name(name_string)
@@ -85,8 +98,6 @@ module Cucumber
         r = text[127].nil? ? result : result + "..."
         return r
       end
-
-      private
 
       def print_summary(features)
         print_stats(features, @options)
